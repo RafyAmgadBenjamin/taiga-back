@@ -51,7 +51,7 @@ def get_user_model_safe():
     Based on: https://github.com/django-oscar/django-oscar/blob/1.0/oscar/core/loading.py#L310-L340
     Ongoing Django issue: https://code.djangoproject.com/ticket/22872
     """
-    user_app, user_model = settings.AUTH_USER_MODEL.split('.')
+    user_app, user_model = settings.AUTH_USER_MODEL.split(".")
 
     try:
         return apps.get_model(user_app, user_model)
@@ -66,7 +66,7 @@ def get_user_model_safe():
             app_config = apps.get_app_config(user_app)
             # `app_config.import_models()` cannot be used here because it
             # would interfere with `apps.populate()`.
-            import_module('%s.%s' % (app_config.name, MODELS_MODULE_NAME))
+            import_module("%s.%s" % (app_config.name, MODELS_MODULE_NAME))
             # In order to account for case-insensitivity of model_name,
             # look up the model through a private API of the app registry.
             return apps.get_registered_model(user_app, user_model)
@@ -85,9 +85,12 @@ class PermissionsMixin(models.Model):
     A mixin class that adds the fields and methods necessary to support
     Django"s Permission model using the ModelBackend.
     """
-    is_superuser = models.BooleanField(_("superuser status"), default=False,
-        help_text=_("Designates that this user has all permissions without "
-                    "explicitly assigning them."))
+
+    is_superuser = models.BooleanField(
+        _("superuser status"),
+        default=False,
+        help_text=_("Designates that this user has all permissions without " "explicitly assigning them."),
+    )
 
     class Meta:
         abstract = True
@@ -116,66 +119,81 @@ def get_default_uuid():
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    uuid = models.CharField(max_length=32, editable=False, null=False,
-                            blank=False, unique=True, default=get_default_uuid)
-    username = models.CharField(_("username"), max_length=255, unique=True,
-        help_text=_("Required. 30 characters or fewer. Letters, numbers and "
-                    "/./-/_ characters"),
-        validators=[
-            validators.RegexValidator(re.compile(r"^[\w.-]+$"), _("Enter a valid username."), "invalid")
-        ])
+    uuid = models.CharField(
+        max_length=32, editable=False, null=False, blank=False, unique=True, default=get_default_uuid
+    )
+    username = models.CharField(
+        _("username"),
+        max_length=255,
+        unique=True,
+        help_text=_("Required. 30 characters or fewer. Letters, numbers and " "/./-/_ characters"),
+        validators=[validators.RegexValidator(re.compile(r"^[\w.-]+$"), _("Enter a valid username."), "invalid")],
+    )
     email = models.EmailField(_("email address"), max_length=255, null=False, blank=False, unique=True)
-    is_active = models.BooleanField(_("active"), default=True,
-        help_text=_("Designates whether this user should be treated as "
-                    "active. Unselect this instead of deleting accounts."))
-    is_staff = models.BooleanField(_('staff status'), default=False,
-        help_text=_('Designates whether the user can log into this admin site.'),
+    is_active = models.BooleanField(
+        _("active"),
+        default=True,
+        help_text=_(
+            "Designates whether this user should be treated as " "active. Unselect this instead of deleting accounts."
+        ),
+    )
+    is_staff = models.BooleanField(
+        _("staff status"), default=False, help_text=_("Designates whether the user can log into this admin site.")
     )
 
     full_name = models.CharField(_("full name"), max_length=256, blank=True)
-    color = models.CharField(max_length=9, null=False, blank=True, default=generate_random_hex_color,
-                             verbose_name=_("color"))
+    color = models.CharField(
+        max_length=9, null=False, blank=True, default=generate_random_hex_color, verbose_name=_("color")
+    )
     bio = models.TextField(null=False, blank=True, default="", verbose_name=_("biography"))
-    photo = models.FileField(upload_to=get_user_file_path,
-                             max_length=500, null=True, blank=True,
-                             verbose_name=_("photo"))
+    photo = models.FileField(
+        upload_to=get_user_file_path, max_length=500, null=True, blank=True, verbose_name=_("photo")
+    )
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
     date_cancelled = models.DateTimeField(_("date cancelled"), null=True, blank=True, default=None)
     accepted_terms = models.BooleanField(_("accepted terms"), default=True)
     read_new_terms = models.BooleanField(_("new terms read"), default=False)
-    lang = models.CharField(max_length=20, null=True, blank=True, default="",
-                            verbose_name=_("default language"))
-    theme = models.CharField(max_length=100, null=True, blank=True, default="",
-                            verbose_name=_("default theme"))
-    timezone = models.CharField(max_length=20, null=True, blank=True, default="",
-                                verbose_name=_("default timezone"))
-    colorize_tags = models.BooleanField(null=False, blank=True, default=False,
-                                        verbose_name=_("colorize tags"))
-    token = models.CharField(max_length=200, null=True, blank=True, default=None,
-                             verbose_name=_("token"))
+    lang = models.CharField(max_length=20, null=True, blank=True, default="", verbose_name=_("default language"))
+    theme = models.CharField(max_length=100, null=True, blank=True, default="", verbose_name=_("default theme"))
+    timezone = models.CharField(max_length=20, null=True, blank=True, default="", verbose_name=_("default timezone"))
+    colorize_tags = models.BooleanField(null=False, blank=True, default=False, verbose_name=_("colorize tags"))
+    token = models.CharField(max_length=200, null=True, blank=True, default=None, verbose_name=_("token"))
 
-    email_token = models.CharField(max_length=200, null=True, blank=True, default=None,
-                         verbose_name=_("email token"))
+    email_token = models.CharField(max_length=200, null=True, blank=True, default=None, verbose_name=_("email token"))
 
     new_email = models.EmailField(_("new email address"), null=True, blank=True)
     verified_email = models.BooleanField(null=False, blank=False, default=True)
     is_system = models.BooleanField(null=False, blank=False, default=False)
 
+    public_key = models.CharField(null=False, blank=True, default="", max_length=200, verbose_name=_("Public key"))
+    threebot_name = models.CharField(
+        null=False, blank=True, default="", max_length=100, verbose_name=_("Threebot name")
+    )
 
-    max_private_projects = models.IntegerField(null=True, blank=True,
-                                               default=settings.MAX_PRIVATE_PROJECTS_PER_USER,
-                                               verbose_name=_("max number of owned private projects"))
-    max_public_projects = models.IntegerField(null=True, blank=True,
-                                              default=settings.MAX_PUBLIC_PROJECTS_PER_USER,
-                                              verbose_name=_("max number of owned public projects"))
-    max_memberships_private_projects = models.IntegerField(null=True, blank=True,
-                                                           default=settings.MAX_MEMBERSHIPS_PRIVATE_PROJECTS,
-                                                           verbose_name=_("max number of memberships for "
-                                                                          "each owned private project"))
-    max_memberships_public_projects = models.IntegerField(null=True, blank=True,
-                                                          default=settings.MAX_MEMBERSHIPS_PUBLIC_PROJECTS,
-                                                          verbose_name=_("max number of memberships for "
-                                                                         "each owned public project"))
+    max_private_projects = models.IntegerField(
+        null=True,
+        blank=True,
+        default=settings.MAX_PRIVATE_PROJECTS_PER_USER,
+        verbose_name=_("max number of owned private projects"),
+    )
+    max_public_projects = models.IntegerField(
+        null=True,
+        blank=True,
+        default=settings.MAX_PUBLIC_PROJECTS_PER_USER,
+        verbose_name=_("max number of owned public projects"),
+    )
+    max_memberships_private_projects = models.IntegerField(
+        null=True,
+        blank=True,
+        default=settings.MAX_MEMBERSHIPS_PRIVATE_PROJECTS,
+        verbose_name=_("max number of memberships for " "each owned private project"),
+    )
+    max_memberships_public_projects = models.IntegerField(
+        null=True,
+        blank=True,
+        default=settings.MAX_MEMBERSHIPS_PUBLIC_PROJECTS,
+        verbose_name=_("max number of memberships for " "each owned public project"),
+    )
 
     _cached_memberships = None
     _cached_liked_ids = None
@@ -232,8 +250,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 watched_id = "{}-{}".format(watched.content_type.id, watched.object_id)
                 self._cached_watched_ids.add(watched_id)
 
-            notify_policies = self.notify_policies.select_related("project")\
-                .exclude(notify_level=NotifyLevel.none)
+            notify_policies = self.notify_policies.select_related("project").exclude(notify_level=NotifyLevel.none)
 
             for notify_policy in notify_policies:
                 obj_type = ContentType.objects.get_for_model(notify_policy.project)
@@ -296,14 +313,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Role(models.Model):
-    name = models.CharField(max_length=200, null=False, blank=False,
-                            verbose_name=_("name"))
-    slug = models.SlugField(max_length=250, null=False, blank=True,
-                            verbose_name=_("slug"))
-    permissions = ArrayField(models.TextField(null=False, blank=False, choices=MEMBERS_PERMISSIONS),
-                             null=True, blank=True, default=list, verbose_name=_("permissions"))
-    order = models.IntegerField(default=10, null=False, blank=False,
-                                verbose_name=_("order"))
+    name = models.CharField(max_length=200, null=False, blank=False, verbose_name=_("name"))
+    slug = models.SlugField(max_length=250, null=False, blank=True, verbose_name=_("slug"))
+    permissions = ArrayField(
+        models.TextField(null=False, blank=False, choices=MEMBERS_PERMISSIONS),
+        null=True,
+        blank=True,
+        default=list,
+        verbose_name=_("permissions"),
+    )
+    order = models.IntegerField(default=10, null=False, blank=False, verbose_name=_("order"))
     # null=True is for make work django 1.7 migrations. project
     # field causes some circular dependencies, and due to this
     # it can not be serialized in one transactional migration.
@@ -345,8 +364,7 @@ class AuthData(models.Model):
 
 # On Role object is changed, update all membership
 # related to current role.
-@receiver(models.signals.post_save, sender=Role,
-          dispatch_uid="role_post_save")
+@receiver(models.signals.post_save, sender=Role, dispatch_uid="role_post_save")
 def role_post_save(sender, instance, created, **kwargs):
     # ignore if object is just created
     if created:

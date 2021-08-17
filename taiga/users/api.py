@@ -42,6 +42,7 @@ from .signals import user_cancel_account as user_cancel_account_signal
 from .signals import user_change_email as user_change_email_signal
 from .throttling import UserDetailRateThrottle, UserUpdateRateThrottle
 
+
 class UsersViewSet(ModelCrudViewSet):
     permission_classes = (permissions.UserPermission,)
     admin_serializer_class = serializers.UserAdminSerializer
@@ -78,9 +79,17 @@ class UsersViewSet(ModelCrudViewSet):
         raise exc.NotSupported()
 
     def list(self, request, *args, **kwargs):
-        self.object_list = MembersFilterBackend().filter_queryset(request,
-                                                                  self.get_queryset(),
-                                                                  self)
+        self.object_list = MembersFilterBackend().filter_queryset(request, self.get_queryset(), self)
+
+        if "publickey" in request.QUERY_PARAMS:
+            publickey = request.QUERY_PARAMS["publickey"]
+            self.object_list = self.object_list.filter(public_key=publickey)
+
+        if "username" in request.QUERY_PARAMS:
+            self.object_list = self.object_list.filter(username=request.QUERY_PARAMS["username"])
+
+        if "email" in request.QUERY_PARAMS:
+            self.object_list = self.object_list.filter(email=request.QUERY_PARAMS["email"])
 
         page = self.paginate_queryset(self.object_list)
         if page is not None:
@@ -92,7 +101,7 @@ class UsersViewSet(ModelCrudViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         self.object = get_object_or_404(self.get_queryset(), **kwargs)
-        self.check_permissions(request, 'retrieve', self.object)
+        self.check_permissions(request, "retrieve", self.object)
         serializer = self.get_serializer(self.object)
         return response.Ok(serializer.data)
 
@@ -106,7 +115,7 @@ class UsersViewSet(ModelCrudViewSet):
         user = self.get_object()
         self.check_permissions(request, "update", user)
 
-        new_email = request.DATA.pop('email', None)
+        new_email = request.DATA.pop("email", None)
         if new_email is not None:
             valid_new_email = True
             duplicated_email = models.User.objects.filter(email=new_email).exists()
@@ -128,13 +137,7 @@ class UsersViewSet(ModelCrudViewSet):
             request.user.email_token = str(uuid.uuid4())
             request.user.new_email = new_email
             request.user.save(update_fields=["email_token", "new_email"])
-            email = mail_builder.change_email(
-                request.user.new_email,
-                {
-                    "user": request.user,
-                    "lang": request.user.lang
-                }
-            )
+            email = mail_builder.change_email(request.user.new_email, {"user": request.user, "lang": request.user.lang})
             email.send()
 
         return super().partial_update(request, *args, **kwargs)
@@ -155,7 +158,7 @@ class UsersViewSet(ModelCrudViewSet):
 
     @list_route(methods=["POST"])
     def password_recovery(self, request, pk=None):
-        username_or_email = request.DATA.get('username', None)
+        username_or_email = request.DATA.get("username", None)
 
         self.check_permissions(request, "password_recovery", None)
 
@@ -229,7 +232,7 @@ class UsersViewSet(ModelCrudViewSet):
         """
         self.check_permissions(request, "change_avatar", None)
 
-        avatar = request.FILES.get('avatar', None)
+        avatar = request.FILES.get("avatar", None)
 
         if not avatar:
             raise exc.WrongArguments(_("Incomplete arguments"))
@@ -268,8 +271,7 @@ class UsersViewSet(ModelCrudViewSet):
         try:
             user = models.User.objects.get(email_token=validator.data["email_token"])
         except models.User.DoesNotExist:
-            raise exc.WrongArguments(_("Invalid, are you sure the token is correct and you "
-                                       "didn't use it before?"))
+            raise exc.WrongArguments(_("Invalid, are you sure the token is correct and you " "didn't use it before?"))
 
         self.check_permissions(request, "change_email", user)
 
@@ -282,10 +284,7 @@ class UsersViewSet(ModelCrudViewSet):
         user.verified_email = True
         user.save(update_fields=["email", "new_email", "email_token", "verified_email"])
 
-        user_change_email_signal.send(sender=user.__class__,
-                                      user=user,
-                                      old_email=old_email,
-                                      new_email=new_email)
+        user_change_email_signal.send(sender=user.__class__, user=user, old_email=old_email, new_email=new_email)
 
         # If the user changes their email, the application will ask again if they
         # want to subscribe to the Taiga newsletter.
@@ -331,9 +330,7 @@ class UsersViewSet(ModelCrudViewSet):
         """
         file_url = services.export_profile(request.user)
 
-        response_data = {
-            "url": file_url
-        }
+        response_data = {"url": file_url}
         return response.Ok(response_data)
 
     @list_route(methods=["POST"])
@@ -351,11 +348,14 @@ class UsersViewSet(ModelCrudViewSet):
     @detail_route(methods=["GET"])
     def contacts(self, request, *args, **kwargs):
         user = get_object_or_404(models.User, **kwargs)
-        self.check_permissions(request, 'contacts', user)
+        self.check_permissions(request, "contacts", user)
 
-        self.object_list = user_filters.ContactsFilterBackend().filter_queryset(
-            user, request, self.get_queryset(), self).extra(
-            select={"complete_user_name": "concat(full_name, username)"}).order_by("complete_user_name")
+        self.object_list = (
+            user_filters.ContactsFilterBackend()
+            .filter_queryset(user, request, self.get_queryset(), self)
+            .extra(select={"complete_user_name": "concat(full_name, username)"})
+            .order_by("complete_user_name")
+        )
 
         page = self.paginate_queryset(self.object_list)
         if page is not None:
@@ -375,11 +375,8 @@ class UsersViewSet(ModelCrudViewSet):
     def watched(self, request, *args, **kwargs):
         for_user = get_object_or_404(models.User, **kwargs)
         from_user = request.user
-        self.check_permissions(request, 'watched', for_user)
-        filters = {
-            "type": request.GET.get("type", None),
-            "q": request.GET.get("q", None),
-        }
+        self.check_permissions(request, "watched", for_user)
+        filters = {"type": request.GET.get("type", None), "q": request.GET.get("q", None)}
 
         self.object_list = services.get_watched_list(for_user, from_user, **filters)
         page = self.paginate_queryset(self.object_list)
@@ -410,10 +407,8 @@ class UsersViewSet(ModelCrudViewSet):
     def liked(self, request, *args, **kwargs):
         for_user = get_object_or_404(models.User, **kwargs)
         from_user = request.user
-        self.check_permissions(request, 'liked', for_user)
-        filters = {
-            "q": request.GET.get("q", None),
-        }
+        self.check_permissions(request, "liked", for_user)
+        filters = {"q": request.GET.get("q", None)}
 
         self.object_list = services.get_liked_list(for_user, from_user, **filters)
         page = self.paginate_queryset(self.object_list)
@@ -424,7 +419,9 @@ class UsersViewSet(ModelCrudViewSet):
             "user_likes": services.get_liked_content_for_user(request.user),
         }
 
-        response_data = [serializers.LikedObjectSerializer(into_namedtuple(elem), **extra_args).data for elem in elements]
+        response_data = [
+            serializers.LikedObjectSerializer(into_namedtuple(elem), **extra_args).data for elem in elements
+        ]
 
         return response.Ok(response_data)
 
@@ -432,11 +429,8 @@ class UsersViewSet(ModelCrudViewSet):
     def voted(self, request, *args, **kwargs):
         for_user = get_object_or_404(models.User, **kwargs)
         from_user = request.user
-        self.check_permissions(request, 'liked', for_user)
-        filters = {
-            "type": request.GET.get("type", None),
-            "q": request.GET.get("q", None),
-        }
+        self.check_permissions(request, "liked", for_user)
+        filters = {"type": request.GET.get("type", None), "q": request.GET.get("q", None)}
 
         self.object_list = services.get_voted_list(for_user, from_user, **filters)
         page = self.paginate_queryset(self.object_list)
@@ -447,7 +441,9 @@ class UsersViewSet(ModelCrudViewSet):
             "user_votes": services.get_voted_content_for_user(request.user),
         }
 
-        response_data = [serializers.VotedObjectSerializer(into_namedtuple(elem), **extra_args).data for elem in elements]
+        response_data = [
+            serializers.VotedObjectSerializer(into_namedtuple(elem), **extra_args).data for elem in elements
+        ]
 
         return response.Ok(response_data)
 
@@ -459,12 +455,12 @@ class RolesViewSet(BlockedByProjectMixin, ModelCrudViewSet):
     model = models.Role
     serializer_class = serializers.RoleSerializer
     validator_class = validators.RoleValidator
-    permission_classes = (permissions.RolesPermission, )
+    permission_classes = (permissions.RolesPermission,)
     filter_backends = (filters.CanViewProjectFilterBackend,)
-    filter_fields = ('project',)
+    filter_fields = ("project",)
 
     def pre_delete(self, obj):
-        move_to = self.request.QUERY_PARAMS.get('moveTo', None)
+        move_to = self.request.QUERY_PARAMS.get("moveTo", None)
         if move_to:
             membership_model = apps.get_model("projects", "Membership")
             role_dest = get_object_or_404(self.model, project=obj.project, id=move_to)

@@ -20,8 +20,7 @@ def _generate_uuid():
 class Application(models.Model):
     id = models.CharField(primary_key=True, max_length=255, unique=True, default=_generate_uuid)
 
-    name = models.CharField(max_length=255, null=False, blank=False,
-                            verbose_name=_("name"))
+    name = models.CharField(max_length=255, null=False, blank=False, verbose_name=_("name"))
 
     icon_url = models.TextField(null=True, blank=True, verbose_name=_("Icon url"))
     web = models.CharField(max_length=255, null=True, blank=True, verbose_name=_("web"))
@@ -65,11 +64,13 @@ class ApplicationToken(models.Model):
     class Meta:
         verbose_name = "application token"
         verbose_name_plural = "application tokens"
-        ordering = ["application", "user",]
-        unique_together = ("application", "user",)
+        ordering = ["application", "user"]
+        unique_together = ("application", "user")
 
     def __str__(self):
-        return "{application}: {user} - {token}".format(application=self.application.name, user=self.user.get_full_name(), token=self.token)
+        return "{application}: {user} - {token}".format(
+            application=self.application.name, user=self.user.get_full_name(), token=self.token
+        )
 
     @property
     def next_url(self):
@@ -83,3 +84,5 @@ class ApplicationToken(models.Model):
         if not self.token:
             data = {"app_token_id": self.pk}
             self.token = signing.dumps(data)
+            return self.token
+            # i have added the return

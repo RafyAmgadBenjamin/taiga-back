@@ -16,9 +16,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 APPEND_SLASH = False
 ALLOWED_HOSTS = ["*"]
 
-ADMINS = (
-    ("Admin", "example@example.com"),
-)
+ADMINS = (("Admin", "example@example.com"),)
 
 DEBUG = False
 
@@ -28,16 +26,11 @@ DATABASES = {
         "NAME": "taiga",
         "USER": "taiga",
         "PASSWORD": "taiga",
-        "HOST": "127.0.0.1"
+        "HOST": "127.0.0.1",
     }
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "unique-snowflake"
-    }
-}
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "unique-snowflake"}}
 
 INSTANCE_TYPE = "SRC"
 
@@ -45,25 +38,20 @@ INSTANCE_TYPE = "SRC"
 CELERY_ENABLED = False
 from kombu import Queue  # noqa
 
-CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-CELERY_RESULT_BACKEND = None # for a general installation, we don't need to store the results
-CELERY_ACCEPT_CONTENT = ['pickle', ]  # Values are 'pickle', 'json', 'msgpack' and 'yaml'
+CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"
+CELERY_RESULT_BACKEND = None  # for a general installation, we don't need to store the results
+CELERY_ACCEPT_CONTENT = ["pickle"]  # Values are 'pickle', 'json', 'msgpack' and 'yaml'
 CELERY_TASK_SERIALIZER = "pickle"
 CELERY_RESULT_SERIALIZER = "pickle"
-CELERY_TIMEZONE = 'Europe/Madrid'
-CELERY_TASK_DEFAULT_QUEUE = 'tasks'
-CELERY_QUEUES = (
-    Queue('tasks', routing_key='task.#'),
-    Queue('transient', routing_key='transient.#', delivery_mode=1)
-)
-CELERY_TASK_DEFAULT_EXCHANGE = 'tasks'
-CELERY_TASK_DEFAULT_EXCHANGE_TYPE = 'topic'
-CELERY_TASK_DEFAULT_ROUTING_KEY = 'task.default'
+CELERY_TIMEZONE = "Europe/Madrid"
+CELERY_TASK_DEFAULT_QUEUE = "tasks"
+CELERY_QUEUES = (Queue("tasks", routing_key="task.#"), Queue("transient", routing_key="transient.#", delivery_mode=1))
+CELERY_TASK_DEFAULT_EXCHANGE = "tasks"
+CELERY_TASK_DEFAULT_EXCHANGE_TYPE = "topic"
+CELERY_TASK_DEFAULT_ROUTING_KEY = "task.default"
 
 
-PASSWORD_HASHERS = [
-    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
-]
+PASSWORD_HASHERS = ["django.contrib.auth.hashers.PBKDF2PasswordHasher"]
 
 # Default configuration for reverse proxy
 USE_X_FORWARDED_HOST = True
@@ -83,19 +71,19 @@ USE_I18N = True
 USE_L10N = True
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
 # Languages we provide translations for, out of the box.
 LANGUAGES = [
-    #("af", "Afrikaans"),  # Afrikaans
+    # ("af", "Afrikaans"),  # Afrikaans
     ("ar", "العربية‏"),  # Arabic
-    #("ast", "Asturiano"),  # Asturian
-    #("az", "Azərbaycan dili"),  # Azerbaijani
-    #("bg", "Български"),  # Bulgarian
-    #("be", "Беларуская"),  # Belarusian
-    #("bn", "বাংলা"),  # Bengali
-    #("br", "Bretón"),  # Breton
-    #("bs", "Bosanski"),  # Bosnian
+    # ("ast", "Asturiano"),  # Asturian
+    # ("az", "Azərbaycan dili"),  # Azerbaijani
+    # ("bg", "Български"),  # Bulgarian
+    # ("be", "Беларуская"),  # Belarusian
+    # ("bn", "বাংলা"),  # Bengali
+    # ("br", "Bretón"),  # Breton
+    # ("bs", "Bosanski"),  # Bosnian
     ("ca", "Català"),  # Catalan
     # ("cs", "Čeština"),  # Czech
     # ("cy", "Cymraeg"),  # Welsh
@@ -176,10 +164,7 @@ LANGUAGES = [
 # Languages using BiDi (right-to-left) layout
 LANGUAGES_BIDI = ["he", "ar", "fa", "ur"]
 
-LOCALE_PATHS = (
-    os.path.join(BASE_DIR, "locale"),
-    os.path.join(BASE_DIR, "taiga", "locale"),
-)
+LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"), os.path.join(BASE_DIR, "taiga", "locale"))
 
 SITES = {
     "api": {"domain": "localhost:8000", "scheme": "http", "name": "api"},
@@ -190,12 +175,17 @@ SITE_ID = "api"
 
 # Session and CSRF configuration
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
-# SESSION_COOKIE_AGE = 1209600  # (2 weeks) and set SESSION_EXPIRE_AT_BROWSER_CLOSE to false
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_AGE = None
-CSRF_COOKIE_SECURE = True
-
+SESSION_COOKIE_AGE = 1209600  # (2 weeks) and set SESSION_EXPIRE_AT_BROWSER_CLOSE to false
+# SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_AGE = None
+# CSRF_COOKIE_SECURE = True
+# SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_NAME = "rafysession"
+SESSION_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SAMESITE = None
+# SESSION_COOKIE_DOMAIN = ".localhost"
 # MAIL OPTIONS
 DEFAULT_FROM_EMAIL = "john@doe.com"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -248,12 +238,10 @@ SECRET_KEY = "aw3+t2r(8(0kkrhg8)gx6i96v5^kv%6cfep9wxfom0%7dy0m9e"
 TEMPLATES = [
     {
         "BACKEND": "django_jinja.backend.Jinja2",
-        "DIRS": [
-            os.path.join(BASE_DIR, "templates"),
-        ],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
-            'context_processors': [
+            "context_processors": [
                 "django.contrib.auth.context_processors.auth",
                 "django.template.context_processors.request",
                 "django.template.context_processors.i18n",
@@ -263,16 +251,14 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
             ],
             "match_extension": ".jinja",
-        }
+        },
     },
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            os.path.join(BASE_DIR, "templates"),
-        ],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
-            'context_processors': [
+            "context_processors": [
                 "django.contrib.auth.context_processors.auth",
                 "django.template.context_processors.request",
                 "django.template.context_processors.i18n",
@@ -280,21 +266,19 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
-            ],
-        }
+            ]
+        },
     },
 ]
 
 
 MIDDLEWARE = [
     "taiga.base.middleware.cors.CorsMiddleware",
-    "taiga.events.middleware.SessionIDMiddleware",
-
-    # Common middlewares
     "django.middleware.common.CommonMiddleware",
+    "taiga.events.middleware.SessionIDMiddleware",
+    # Common middlewares
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-
     # Only needed by django admin
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -303,8 +287,12 @@ MIDDLEWARE = [
 
 
 ROOT_URLCONF = "taiga.urls"
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = ("http://localhost:9001", "http://127.0.0.1:9001")
 
 INSTALLED_APPS = [
+    "corsheaders",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -313,7 +301,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
     "django.contrib.postgres",
-
     "taiga.base",
     "taiga.base.api",
     "taiga.locale",
@@ -351,13 +338,13 @@ INSTALLED_APPS = [
     "taiga.hooks.gogs",
     "taiga.webhooks",
     "taiga.importers",
-
     "djmail",
     "django_jinja",
     "django_jinja.contrib._humanize",
     "sr",
     "easy_thumbnails",
     "raven.contrib.django.raven_compat",
+    "rest_framework",
 ]
 
 WSGI_APPLICATION = "taiga.wsgi.application"
@@ -365,119 +352,73 @@ WSGI_APPLICATION = "taiga.wsgi.application"
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": True,
-    "filters": {
-        "require_debug_false": {
-            "()": "django.utils.log.RequireDebugFalse"
-        }
-    },
+    "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
     "formatters": {
-        "complete": {
-            "format": "%(levelname)s:%(asctime)s:%(module)s %(message)s"
-        },
-        "simple": {
-            "format": "%(levelname)s:%(asctime)s: %(message)s"
-        },
-        "null": {
-            "format": "%(message)s",
-        },
-        "django.server": {
-            "()": "django.utils.log.ServerFormatter",
-            "format": "[%(server_time)s] %(message)s",
-        },
+        "complete": {"format": "%(levelname)s:%(asctime)s:%(module)s %(message)s"},
+        "simple": {"format": "%(levelname)s:%(asctime)s: %(message)s"},
+        "null": {"format": "%(message)s"},
+        "django.server": {"()": "django.utils.log.ServerFormatter", "format": "[%(server_time)s] %(message)s"},
     },
     "handlers": {
-        "null": {
-            "level": "DEBUG",
-            "class": "logging.NullHandler",
-        },
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-        },
+        "null": {"level": "DEBUG", "class": "logging.NullHandler"},
+        "console": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "simple"},
         "mail_admins": {
             "level": "ERROR",
             "filters": ["require_debug_false"],
             "class": "taiga.base.utils.logs.CustomAdminEmailHandler",
         },
-        "django.server": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "django.server",
-        },
+        "django.server": {"level": "INFO", "class": "logging.StreamHandler", "formatter": "django.server"},
     },
     "loggers": {
-        "django": {
-            "handlers": ["null"],
-            "level": "INFO",
-            "propagate": True,
-        },
-        "django.request": {
-            "handlers": ["mail_admins", "console"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-        "django.server": {
-            "handlers": ["django.server"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "MARKDOWN": {
-            "handlers": ["null"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "taiga.export_import": {
-            "handlers": ["mail_admins", "console"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-        "taiga": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-    }
+        "django": {"handlers": ["null"], "level": "INFO", "propagate": True},
+        "django.request": {"handlers": ["mail_admins", "console"], "level": "ERROR", "propagate": False},
+        "django.server": {"handlers": ["django.server"], "level": "INFO", "propagate": False},
+        "MARKDOWN": {"handlers": ["null"], "level": "INFO", "propagate": False},
+        "taiga.export_import": {"handlers": ["mail_admins", "console"], "level": "ERROR", "propagate": False},
+        "taiga": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+    },
 }
 
 
 AUTH_USER_MODEL = "users.User"
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=3),
-    'CANCEL_TOKEN_LIFETIME': timedelta(days=100),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=3),
+    "CANCEL_TOKEN_LIFETIME": timedelta(days=100),
 }
 
-FLUSH_REFRESHED_TOKENS_PERIODICITY = 3 * 24 * 3600 # seconds
+FLUSH_REFRESHED_TOKENS_PERIODICITY = 3 * 24 * 3600  # seconds
 
 FORMAT_MODULE_PATH = "taiga.base.formats"
 
 DATE_INPUT_FORMATS = (
-    "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%b %d %Y",
-    "%b %d, %Y", "%d %b %Y", "%d %b, %Y", "%B %d %Y",
-    "%B %d, %Y", "%d %B %Y", "%d %B, %Y"
+    "%Y-%m-%d",
+    "%m/%d/%Y",
+    "%d/%m/%Y",
+    "%b %d %Y",
+    "%b %d, %Y",
+    "%d %b %Y",
+    "%d %b, %Y",
+    "%B %d %Y",
+    "%B %d, %Y",
+    "%d %B %Y",
+    "%d %B, %Y",
 )
 
 # Authentication settings (only for django admin)
-AUTHENTICATION_BACKENDS = (
-    "django.contrib.auth.backends.ModelBackend",  # default
-)
+AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)  # default
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         # Mainly used by taiga-front
-        'taiga.auth.authentication.JWTAuthentication',
-
+        "taiga.auth.authentication.JWTAuthentication",
         # Mainly used for api debug.
         "taiga.auth.backends.Session",
-
         # Application tokens auth
         "taiga.external_apps.auth_backends.Token",
     ),
-    "DEFAULT_THROTTLE_CLASSES": (
-        "taiga.base.throttling.CommonThrottle",
-    ),
+    "DEFAULT_THROTTLE_CLASSES": ("taiga.base.throttling.CommonThrottle",),
     "DEFAULT_THROTTLE_RATES": {
         "anon-write": None,
         "user-write": None,
@@ -497,7 +438,7 @@ REST_FRAMEWORK = {
     "PAGINATE_BY": 30,
     "PAGINATE_BY_PARAM": "page_size",
     "MAX_PAGINATE_BY": 1000,
-    "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%S%z"
+    "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%S%z",
 }
 
 # Extra expose header related to Taiga APP (see taiga.base.middleware.cors=)
@@ -508,13 +449,13 @@ APP_EXTRA_EXPOSE_HEADERS = [
     "taiga-info-userstories-without-swimlane",
     "taiga-info-project-memberships",
     "taiga-info-project-is-private",
-    "taiga-info-order-updated"
+    "taiga-info-order-updated",
 ]
 
 DEFAULT_PROJECT_TEMPLATE = "scrum"
 # Setting DEFAULT_PROJECT_SLUG_PREFIX to false removes the username from project slug
 DEFAULT_PROJECT_SLUG_PREFIX = True
-PUBLIC_REGISTER_ENABLED = False
+PUBLIC_REGISTER_ENABLED = True
 # None or [] values in USER_EMAIL_ALLOWED_DOMAINS means allow any domain
 USER_EMAIL_ALLOWED_DOMAINS = None
 
@@ -522,19 +463,17 @@ PRIVATE_USER_PROFILES = False
 
 SEARCHES_MAX_RESULTS = 150
 
-SOUTH_MIGRATION_MODULES = {
-    'easy_thumbnails': 'easy_thumbnails.south_migrations',
-}
+SOUTH_MIGRATION_MODULES = {"easy_thumbnails": "easy_thumbnails.south_migrations"}
 
 
-THN_AVATAR_SIZE = 80                # 80x80 pixels
-THN_AVATAR_BIG_SIZE = 300           # 300x300 pixels
-THN_LOGO_SMALL_SIZE = 80            # 80x80 pixels
-THN_LOGO_BIG_SIZE = 300             # 300x300 pixels
-THN_TIMELINE_IMAGE_SIZE = 640       # 640x??? pixels
-THN_CARD_IMAGE_WIDTH = 300          # 300 pixels
-THN_CARD_IMAGE_HEIGHT = 200         # 200 pixels
-THN_PREVIEW_IMAGE_WIDTH = 800       # 800 pixels
+THN_AVATAR_SIZE = 80  # 80x80 pixels
+THN_AVATAR_BIG_SIZE = 300  # 300x300 pixels
+THN_LOGO_SMALL_SIZE = 80  # 80x80 pixels
+THN_LOGO_BIG_SIZE = 300  # 300x300 pixels
+THN_TIMELINE_IMAGE_SIZE = 640  # 640x??? pixels
+THN_CARD_IMAGE_WIDTH = 300  # 300 pixels
+THN_CARD_IMAGE_HEIGHT = 200  # 200 pixels
+THN_PREVIEW_IMAGE_WIDTH = 800  # 800 pixels
 
 THN_AVATAR_SMALL = "avatar"
 THN_AVATAR_BIG = "big-avatar"
@@ -553,7 +492,7 @@ THUMBNAIL_ALIASES = {
         THN_ATTACHMENT_TIMELINE: {"size": (THN_TIMELINE_IMAGE_SIZE, 0), "crop": True},
         THN_ATTACHMENT_CARD: {"size": (THN_CARD_IMAGE_WIDTH, THN_CARD_IMAGE_HEIGHT), "crop": True},
         THN_ATTACHMENT_PREVIEW: {"size": (THN_PREVIEW_IMAGE_WIDTH, 0), "crop": False},
-    },
+    }
 }
 
 # Feedback module settings
@@ -587,7 +526,7 @@ BITBUCKET_VALID_ORIGIN_IPS = [
     "104.192.142.240/28",
     "104.192.143.240/28",
     "185.166.143.240/28",
-    "185.166.142.240/28"
+    "185.166.142.240/28",
 ]
 
 GITLAB_VALID_ORIGIN_IPS = []
@@ -616,41 +555,17 @@ MAX_PENDING_MEMBERSHIPS = 30  # Max number of unconfirmed memberships in a proje
 # DJANGO SETTINGS RESOLVER
 SR = {
     "taigaio_url": "https://taiga.io",
-    "social": {
-        "twitter_url": "https://twitter.com/taigaio",
-        "github_url": "https://github.com/kaleidos-ventures",
-    },
-    "support": {
-        "url": "https://tree.taiga.io/support/",
-        "email": "support@taiga.io"
-    },
+    "social": {"twitter_url": "https://twitter.com/taigaio", "github_url": "https://github.com/kaleidos-ventures"},
+    "support": {"url": "https://tree.taiga.io/support/", "email": "support@taiga.io"},
     "signature": "The Taiga Team",
     "product_name": "Taiga",
 }
 
 IMPORTERS = {
-    "github": {
-        "active": False,
-        "client_id": "",
-        "client_secret": "",
-    },
-    "trello": {
-        "active": False,
-        "api_key": "",
-        "secret_key": "",
-    },
-    "jira": {
-        "active": False,
-        "consumer_key": "",
-        "cert": "",
-        "pub_cert": "",
-    },
-    "asana": {
-        "active": False,
-        "callback_url": "",
-        "app_id": "",
-        "app_secret": "",
-    }
+    "github": {"active": False, "client_id": "", "client_secret": ""},
+    "trello": {"active": False, "api_key": "", "secret_key": ""},
+    "jira": {"active": False, "consumer_key": "", "cert": "", "pub_cert": ""},
+    "asana": {"active": False, "callback_url": "", "app_id": "", "app_secret": ""},
 }
 
 # Configuration for sending notifications
@@ -666,9 +581,7 @@ MDRENDER_CACHE_TIMEOUT = 86400
 ENABLE_TELEMETRY = True
 RUDDER_WRITE_KEY = "1kmTTxJoSmaZNRpU1uORpyZ8mqv"
 DATA_PLANE_URL = "https://telemetry.taiga.io/"
-INSTALLED_APPS += [
-        "taiga.telemetry"
-]
+INSTALLED_APPS += ["taiga.telemetry"]
 
 # NOTE: DON'T INSERT ANYTHING AFTER THIS BLOCK
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
@@ -678,3 +591,9 @@ if "test" in sys.argv:
     print("Try: \033[1;33mpy.test\033[0m")
     sys.exit(0)
 # NOTE: DON'T INSERT MORE SETTINGS AFTER THIS LINE
+
+# Threefold
+PRIVATE_KEY = "25p85axmtVLM8aGp+gYJz6y+AIAVEddb5szzwi+WsSg="
+THREEBOT_URL = "https://login.threefold.me"
+OPEN_KYC_URL = "https://openkyc.live/verification/verify-sei"
+

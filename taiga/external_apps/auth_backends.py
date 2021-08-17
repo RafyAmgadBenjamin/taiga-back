@@ -11,9 +11,11 @@ from taiga.base.api.authentication import BaseAuthentication
 
 from . import services
 
+
 class Token(BaseAuthentication):
     auth_rx = re.compile(r"^Application (.+)$")
 
+    # TODO: check this method as it is not like the old one
     def authenticate(self, request):
         if "HTTP_AUTHORIZATION" not in request.META:
             return None

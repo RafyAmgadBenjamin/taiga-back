@@ -13,3 +13,4 @@ class AuthPermission(TaigaResourcePermission):
     refresh_token_perms = AllowAny()
     verify_token_perms = AllowAny()
     register_perms = AllowAny()
+    callback_perms = AllowAny()

@@ -37,9 +37,7 @@ auth_plugins = {}
 
 
 def register_auth_plugin(name: str, login_func: Callable):
-    auth_plugins[name] = {
-        "login_func": login_func,
-    }
+    auth_plugins[name] = {"login_func": login_func}
 
 
 def get_auth_plugins():
@@ -50,15 +48,18 @@ def get_auth_plugins():
 ## AUTH SERVICES
 #####################
 
+
 def make_auth_response_data(user):
     serializer = UserAdminSerializer(user)
     data = dict(serializer.data)
 
     refresh = RefreshToken.for_user(user)
 
-    data['refresh'] = str(refresh)
-    data['auth_token'] = str(refresh.access_token)
-
+    data["refresh"] = str(refresh)
+    data["auth_token"] = str(refresh.access_token)
+    data["email"] = user.email
+    data["public_key"] = user.public_key
+    data["threebot_name"] = user.threebot_name
     return data
 
 
@@ -66,13 +67,10 @@ def login(username: str, password: str):
     try:
         user = get_and_validate_user(username=username, password=password)
     except exc.WrongArguments:
-        raise AuthenticationFailed(
-            _('No active account found with the given credentials'),
-            'invalid_credentials',
-        )
+        raise AuthenticationFailed(_("No active account found with the given credentials"), "invalid_credentials")
 
     # Generate data
-    data =  make_auth_response_data(user)
+    data = make_auth_response_data(user)
 
     if api_settings.UPDATE_LAST_LOGIN:
         update_last_login(None, user)
@@ -86,7 +84,7 @@ def refresh_token(refresh_token: str):
     except TokenError:
         raise InvalidToken()
 
-    data = {'auth_token': str(refresh.access_token)}
+    data = {"auth_token": str(refresh.access_token)}
 
     if api_settings.ROTATE_REFRESH_TOKENS:
         if api_settings.DENYLIST_AFTER_ROTATION:
@@ -101,7 +99,7 @@ def refresh_token(refresh_token: str):
         refresh.set_jti()
         refresh.set_exp()
 
-        data['refresh'] = str(refresh)
+        data["refresh"] = str(refresh)
 
     return data
 
@@ -115,6 +113,7 @@ def verify_token(token: str):
 ## REGISTER SERVICES
 #####################
 
+
 def send_register_email(user) -> bool:
     """
     Given a user, send register welcome email
@@ -126,7 +125,7 @@ def send_register_email(user) -> bool:
     return bool(email.send())
 
 
-def is_user_already_registered(*, username:str, email:str) -> (bool, str):
+def is_user_already_registered(*, username: str, email: str) -> (bool, str):
     """
     Checks if a specified user is already registred.
 
@@ -144,7 +143,7 @@ def is_user_already_registered(*, username:str, email:str) -> (bool, str):
 
 
 @tx.atomic
-def public_register(username:str, password:str, email:str, full_name:str):
+def public_register(username: str, password: str, email: str, full_name: str):
     """
     Given a parsed parameters, try register a new user
     knowing that it follows a public register flow.
@@ -160,13 +159,15 @@ def public_register(username:str, password:str, email:str, full_name:str):
         raise exc.WrongArguments(reason)
 
     user_model = get_user_model()
-    user = user_model(username=username,
-                      email=email,
-                      email_token=str(uuid.uuid4()),
-                      new_email=email,
-                      verified_email=False,
-                      full_name=full_name,
-                      read_new_terms=True)
+    user = user_model(
+        username=username,
+        email=email,
+        email_token=str(uuid.uuid4()),
+        new_email=email,
+        verified_email=False,
+        full_name=full_name,
+        read_new_terms=True,
+    )
     user.set_password(password)
     try:
         user.save()
@@ -179,8 +180,7 @@ def public_register(username:str, password:str, email:str, full_name:str):
 
 
 @tx.atomic
-def private_register_for_new_user(token:str, username:str, email:str,
-                                  full_name:str, password:str):
+def private_register_for_new_user(token: str, username: str, email: str, full_name: str, password: str):
     """
     Given a inviation token, try register new user matching
     the invitation token.
@@ -190,13 +190,15 @@ def private_register_for_new_user(token:str, username:str, email:str,
         raise exc.WrongArguments(reason)
 
     user_model = get_user_model()
-    user = user_model(username=username,
-                      email=email,
-                      full_name=full_name,
-                      email_token=str(uuid.uuid4()),
-                      new_email=email,
-                      verified_email=False,
-                      read_new_terms=True)
+    user = user_model(
+        username=username,
+        email=email,
+        full_name=full_name,
+        email_token=str(uuid.uuid4()),
+        new_email=email,
+        verified_email=False,
+        read_new_terms=True,
+    )
 
     user.set_password(password)
     try:

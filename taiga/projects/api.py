@@ -62,32 +62,43 @@ from . import throttling
 from ..base.exceptions import NotAuthenticated
 
 
-class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
-                     BlockeableSaveMixin, BlockeableDeleteMixin,
-                     TagsColorsResourceMixin, ModelCrudViewSet):
+class ProjectViewSet(
+    LikedResourceMixin,
+    HistoryResourceMixin,
+    BlockeableSaveMixin,
+    BlockeableDeleteMixin,
+    TagsColorsResourceMixin,
+    ModelCrudViewSet,
+):
     validator_class = validators.ProjectValidator
     queryset = models.Project.objects.all()
-    permission_classes = (permissions.ProjectPermission, )
-    filter_backends = (project_filters.UserOrderFilterBackend,
-                       project_filters.QFilterBackend,
-                       project_filters.CanViewProjectObjFilterBackend,
-                       project_filters.DiscoverModeFilterBackend)
+    permission_classes = (permissions.ProjectPermission,)
+    filter_backends = (
+        project_filters.UserOrderFilterBackend,
+        project_filters.QFilterBackend,
+        project_filters.CanViewProjectObjFilterBackend,
+        project_filters.DiscoverModeFilterBackend,
+    )
 
-    filter_fields = (("member", "members"),
-                     "is_looking_for_people",
-                     "is_featured",
-                     "is_backlog_activated",
-                     "is_kanban_activated")
+    filter_fields = (
+        ("member", "members"),
+        "is_looking_for_people",
+        "is_featured",
+        "is_backlog_activated",
+        "is_kanban_activated",
+    )
 
     ordering = ("name", "id")
-    order_by_fields = ("total_fans",
-                       "total_fans_last_week",
-                       "total_fans_last_month",
-                       "total_fans_last_year",
-                       "total_activity",
-                       "total_activity_last_week",
-                       "total_activity_last_month",
-                       "total_activity_last_year")
+    order_by_fields = (
+        "total_fans",
+        "total_fans_last_week",
+        "total_fans_last_month",
+        "total_fans_last_year",
+        "total_activity",
+        "total_activity_last_week",
+        "total_activity_last_month",
+        "total_activity_last_year",
+    )
 
     def is_blocked(self, obj):
         return obj.blocked_code is not None
@@ -101,14 +112,14 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
     def get_queryset(self):
         qs = super().get_queryset()
         qs = qs.select_related("owner")
-        if self.request.QUERY_PARAMS.get('discover_mode', False):
+        if self.request.QUERY_PARAMS.get("discover_mode", False):
             qs = project_utils.attach_members(qs)
             qs = project_utils.attach_notify_policies(qs)
             qs = project_utils.attach_is_fan(qs, user=self.request.user)
             qs = project_utils.attach_my_role_permissions(qs, user=self.request.user)
             qs = project_utils.attach_closed_milestones(qs)
             qs = project_utils.attach_my_homepage(qs, user=self.request.user)
-        elif self.request.QUERY_PARAMS.get('slight', False):
+        elif self.request.QUERY_PARAMS.get("slight", False):
             qs = project_utils.attach_basic_info(qs, user=self.request.user)
         else:
             qs = project_utils.attach_extra_info(qs, user=self.request.user)
@@ -143,7 +154,7 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
 
         self.object = get_object_or_error(qs, request.user, **kwargs)
 
-        self.check_permissions(request, 'retrieve', self.object)
+        self.check_permissions(request, "retrieve", self.object)
 
         if self.object is None:
             raise Http404
@@ -152,7 +163,7 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
         return response.Ok(serializer.data)
 
     def get_serializer_class(self):
-        if self.action == "list" and self.request.QUERY_PARAMS.get('slight', False):
+        if self.action == "list" and self.request.QUERY_PARAMS.get("slight", False):
             return serializers.ProjectLightSerializer
         if self.action == "list":
             return serializers.ProjectSerializer
@@ -167,7 +178,7 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
         self.object = get_object_or_error(self.get_queryset(), request.user, **kwargs)
         self.check_permissions(request, "change_logo", self.object)
 
-        logo = request.FILES.get('logo', None)
+        logo = request.FILES.get("logo", None)
         if not logo:
             raise exc.WrongArguments(_("Incomplete arguments"))
         try:
@@ -230,8 +241,9 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
 
     @detail_route(methods=["POST"])
     def create_template(self, request, **kwargs):
-        template_name = request.DATA.get('template_name', None)
-        template_description = request.DATA.get('template_description', None)
+
+        template_name = request.DATA.get("template_name", None)
+        template_description = request.DATA.get("template_description", None)
 
         if not template_name:
             raise response.BadRequest(_("Invalid template name"))
@@ -244,23 +256,19 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
 
             project = self.get_object()
 
-            self.check_permissions(request, 'create_template', project)
+            self.check_permissions(request, "create_template", project)
 
-            template = models.ProjectTemplate(
-                name=template_name,
-                slug=template_slug,
-                description=template_description,
-            )
+            template = models.ProjectTemplate(name=template_name, slug=template_slug, description=template_description)
 
             template.load_data_from_project(project)
 
             template.save()
         return response.Created(serializers.ProjectTemplateSerializer(template).data)
 
-    @detail_route(methods=['POST'])
+    @detail_route(methods=["POST"])
     def leave(self, request, pk=None):
         project = self.get_object()
-        self.check_permissions(request, 'leave', project)
+        self.check_permissions(request, "leave", project)
         self.pre_conditions_on_save(project)
         services.remove_user_from_project(request.user, project)
         return response.Ok()
@@ -349,7 +357,7 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
     @detail_route(methods=["GET", "PATCH"])
     def modules(self, request, pk=None):
         project = self.get_object()
-        self.check_permissions(request, 'modules', project)
+        self.check_permissions(request, "modules", project)
         modules_config = services.get_modules_config(project)
 
         if request.method == "GET":
@@ -383,7 +391,7 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
     def transfer_validate_token(self, request, pk=None):
         project = self.get_object()
         self.check_permissions(request, "transfer_validate_token", project)
-        token = request.DATA.get('token', None)
+        token = request.DATA.get("token", None)
         services.transfer.validate_project_transfer_token(token, project, request.user)
         return response.Ok()
 
@@ -394,12 +402,12 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
         services.request_project_transfer(project, request.user)
         return response.Ok()
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=["post"])
     def transfer_start(self, request, pk=None):
         project = self.get_object()
         self.check_permissions(request, "transfer_start", project)
 
-        user_id = request.DATA.get('user', None)
+        user_id = request.DATA.get("user", None)
         if user_id is None:
             raise exc.WrongArguments(_("Invalid user id"))
 
@@ -413,41 +421,38 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
         if not project.memberships.filter(user=user).exists():
             return response.BadRequest(_("The user must already be a project member"))
 
-        reason = request.DATA.get('reason', None)
+        reason = request.DATA.get("reason", None)
         services.start_project_transfer(project, user, reason)
         return response.Ok()
 
     @detail_route(methods=["POST"])
     def transfer_accept(self, request, pk=None):
-        token = request.DATA.get('token', None)
+        token = request.DATA.get("token", None)
         if token is None:
             raise exc.WrongArguments(_("Invalid token"))
 
         project = self.get_object()
         self.check_permissions(request, "transfer_accept", project)
 
-        (can_transfer, error_message) = services.check_if_project_can_be_transfered(
-            project,
-            request.user,
-        )
+        (can_transfer, error_message) = services.check_if_project_can_be_transfered(project, request.user)
         if not can_transfer:
             members = project.memberships.count()
             raise exc.NotEnoughSlotsForProject(project.is_private, members, error_message)
 
-        reason = request.DATA.get('reason', None)
+        reason = request.DATA.get("reason", None)
         services.accept_project_transfer(project, request.user, token, reason)
         return response.Ok()
 
     @detail_route(methods=["POST"])
     def transfer_reject(self, request, pk=None):
-        token = request.DATA.get('token', None)
+        token = request.DATA.get("token", None)
         if token is None:
             raise exc.WrongArguments(_("Invalid token"))
 
         project = self.get_object()
         self.check_permissions(request, "transfer_reject", project)
 
-        reason = request.DATA.get('reason', None)
+        reason = request.DATA.get("reason", None)
         services.reject_project_transfer(project, request.user, token, reason)
         return response.Ok()
 
@@ -465,12 +470,10 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
         data = validator.data
 
         # Validate if the project can be imported
-        is_private = data.get('is_private', False)
+        is_private = data.get("is_private", False)
         total_memberships = len(data.get("users", [])) + 1
         (enough_slots, error_message) = users_services.has_available_slot_for_new_project(
-            self.request.user,
-            is_private,
-            total_memberships
+            self.request.user, is_private, total_memberships
         )
         if not enough_slots:
             raise exc.NotEnoughSlotsForProject(is_private, total_memberships, error_message)
@@ -481,7 +484,7 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
             name=data["name"],
             description=data["description"],
             is_private=data["is_private"],
-            users=data["users"]
+            users=data["users"],
         )
         new_project = get_object_or_error(self.get_queryset(), request.user, id=new_project.id)
         serializer = self.get_serializer(new_project)
@@ -508,7 +511,7 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
     def pre_save(self, obj):
         if not obj.id:
             obj.owner = self.request.user
-            obj.template = self.request.QUERY_PARAMS.get('template', None)
+            obj.template = self.request.QUERY_PARAMS.get("template", None)
 
         if not obj.id or self.get_object().is_private != obj.is_private:
             # Validate if the owner have enough slots to create the project
@@ -523,7 +526,7 @@ class ProjectViewSet(LikedResourceMixin, HistoryResourceMixin,
 
     def destroy(self, request, *args, **kwargs):
         obj = self.get_object_or_none()
-        self.check_permissions(request, 'destroy', obj)
+        self.check_permissions(request, "destroy", obj)
 
         if obj is None:
             raise Http404
@@ -568,15 +571,15 @@ class ProjectWatchersViewSet(WatchersViewSetMixin, ModelListViewSet):
 ## Custom values for selectors
 ######################################################
 
-class EpicStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
-                        ModelCrudViewSet, BulkUpdateOrderMixin):
+
+class EpicStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
 
     model = models.EpicStatus
     serializer_class = serializers.EpicStatusSerializer
     validator_class = validators.EpicStatusValidator
     permission_classes = (permissions.EpicStatusPermission,)
     filter_backends = (filters.CanViewProjectFilterBackend,)
-    filter_fields = ('project',)
+    filter_fields = ("project",)
     bulk_update_param = "bulk_epic_statuses"
     bulk_update_perm = "change_epicstatus"
     bulk_update_order_action = services.bulk_update_epic_status_order
@@ -590,15 +593,14 @@ class EpicStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
             return super().create(request, *args, **kwargs)
 
 
-class UserStoryStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
-                             ModelCrudViewSet, BulkUpdateOrderMixin):
+class UserStoryStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
 
     model = models.UserStoryStatus
     serializer_class = serializers.UserStoryStatusSerializer
     validator_class = validators.UserStoryStatusValidator
     permission_classes = (permissions.UserStoryStatusPermission,)
     filter_backends = (filters.CanViewProjectFilterBackend,)
-    filter_fields = ('project',)
+    filter_fields = ("project",)
     bulk_update_param = "bulk_userstory_statuses"
     bulk_update_perm = "change_userstorystatus"
     bulk_update_order_action = services.bulk_update_userstory_status_order
@@ -613,20 +615,20 @@ class UserStoryStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
 
     def move_on_destroy_reorder_after_moved(self, moved_to_obj, moved_objs_queryset):
         project = moved_to_obj.project
-        bulk_userstories_ids = (moved_objs_queryset.order_by('swimlane__order', 'kanban_order')
-                                                   .values_list('id', flat=True))
+        bulk_userstories_ids = moved_objs_queryset.order_by("swimlane__order", "kanban_order").values_list(
+            "id", flat=True
+        )
         reset_userstories_kanban_order_in_bulk(project, bulk_userstories_ids)
 
 
-class PointsViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
-                    ModelCrudViewSet, BulkUpdateOrderMixin):
+class PointsViewSet(MoveOnDestroyMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
 
     model = models.Points
     serializer_class = serializers.PointsSerializer
     validator_class = validators.PointsValidator
     permission_classes = (permissions.PointsPermission,)
     filter_backends = (filters.CanViewProjectFilterBackend,)
-    filter_fields = ('project',)
+    filter_fields = ("project",)
     bulk_update_param = "bulk_points"
     bulk_update_perm = "change_points"
     bulk_update_order_action = services.bulk_update_points_order
@@ -640,15 +642,14 @@ class PointsViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
             return super().create(request, *args, **kwargs)
 
 
-class SwimlaneViewSet(MoveOnDestroySwimlaneMixin, BlockedByProjectMixin,
-                      ModelCrudViewSet, BulkUpdateOrderMixin):
+class SwimlaneViewSet(MoveOnDestroySwimlaneMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
 
     model = models.Swimlane
     serializer_class = serializers.SwimlaneSerializer
     validator_class = validators.SwimlaneValidator
     permission_classes = (permissions.SwimlanePermission,)
     filter_backends = (filters.CanViewProjectFilterBackend,)
-    filter_fields = ('project',)
+    filter_fields = ("project",)
     bulk_update_param = "bulk_swimlanes"
     bulk_update_perm = "change_swimlanes"
     bulk_update_order_action = services.bulk_update_swimlane_order
@@ -681,9 +682,10 @@ class SwimlaneUserStoryStatusViewSet(BlockedByProjectMixin, ModelListViewSet, Mo
     serializer_class = serializers.SwimlaneUserStoryStatusSerializer
     validator_class = validators.SwimlaneUserStoryStatusValidator
     permission_classes = (permissions.SwimlaneUserStoryStatusPermission,)
-    filter_backends = (filters.custom_filter_class(filters.CanViewProjectFilterBackend,
-                                                   project_query_param="status__project"),)
-    filter_fields = ('project',)
+    filter_backends = (
+        filters.custom_filter_class(filters.CanViewProjectFilterBackend, project_query_param="status__project"),
+    )
+    filter_fields = ("project",)
 
 
 class UserStoryDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
@@ -693,7 +695,7 @@ class UserStoryDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
     validator_class = validators.UserStoryDueDateValidator
     permission_classes = (permissions.UserStoryDueDatePermission,)
     filter_backends = (filters.CanViewProjectFilterBackend,)
-    filter_fields = ('project',)
+    filter_fields = ("project",)
 
     def create(self, request, *args, **kwargs):
         project_id = request.DATA.get("project", 0)
@@ -702,27 +704,23 @@ class UserStoryDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
 
     def pre_delete(self, obj):
         if obj.by_default:
-            raise exc.BadRequest(
-                _("You can't delete the default due date status of a user story"))
+            raise exc.BadRequest(_("You can't delete the default due date status of a user story"))
 
     @list_route(methods=["POST"])
     def create_default(self, request, **kwargs):
-        context = {
-            "request": request
-        }
-        validator = validators.DueDatesCreationValidator(data=request.DATA,
-                                                         context=context)
+
+        context = {"request": request}
+        validator = validators.DueDatesCreationValidator(data=request.DATA, context=context)
         if not validator.is_valid():
             return response.BadRequest(validator.errors)
 
-        project_id = request.DATA.get('project_id')
+        project_id = request.DATA.get("project_id")
         project = models.Project.objects.get(id=project_id)
 
         if project.us_duedates.all():
             raise exc.BadRequest(_("Project does already have due dates"))
 
-        project_template = models.ProjectTemplate.objects.get(
-            id=project.creation_template.id)
+        project_template = models.ProjectTemplate.objects.get(id=project.creation_template.id)
 
         for us_duedate in project_template.us_duedates:
             models.UserStoryDueDate.objects.create(
@@ -731,7 +729,7 @@ class UserStoryDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
                 color=us_duedate["color"],
                 days_to_due=us_duedate["days_to_due"],
                 order=us_duedate["order"],
-                project=project
+                project=project,
             )
         project.save()
 
@@ -740,8 +738,7 @@ class UserStoryDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
         return response.Ok(serializer.data)
 
 
-class TaskStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
-                        ModelCrudViewSet, BulkUpdateOrderMixin):
+class TaskStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
 
     model = models.TaskStatus
     serializer_class = serializers.TaskStatusSerializer
@@ -769,7 +766,7 @@ class TaskDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
     validator_class = validators.TaskDueDateValidator
     permission_classes = (permissions.TaskDueDatePermission,)
     filter_backends = (filters.CanViewProjectFilterBackend,)
-    filter_fields = ('project',)
+    filter_fields = ("project",)
 
     def create(self, request, *args, **kwargs):
         project_id = request.DATA.get("project", 0)
@@ -778,27 +775,22 @@ class TaskDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
 
     def pre_delete(self, obj):
         if obj.by_default:
-            raise exc.BadRequest(
-                _("You can't delete the default due date status of a task"))
+            raise exc.BadRequest(_("You can't delete the default due date status of a task"))
 
     @list_route(methods=["POST"])
     def create_default(self, request, **kwargs):
-        context = {
-            "request": request
-        }
-        validator = validators.DueDatesCreationValidator(data=request.DATA,
-                                                         context=context)
+        context = {"request": request}
+        validator = validators.DueDatesCreationValidator(data=request.DATA, context=context)
         if not validator.is_valid():
             return response.BadRequest(validator.errors)
 
-        project_id = request.DATA.get('project_id')
+        project_id = request.DATA.get("project_id")
         project = models.Project.objects.get(id=project_id)
 
         if project.task_duedates.all():
             raise exc.BadRequest(_("Project does already have task due dates"))
 
-        project_template = models.ProjectTemplate.objects.get(
-            id=project.creation_template.id)
+        project_template = models.ProjectTemplate.objects.get(id=project.creation_template.id)
 
         for task_duedate in project_template.task_duedates:
             models.TaskDueDate.objects.create(
@@ -807,18 +799,16 @@ class TaskDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
                 color=task_duedate["color"],
                 days_to_due=task_duedate["days_to_due"],
                 order=task_duedate["order"],
-                project=project
+                project=project,
             )
         project.save()
 
-        serializer = self.get_serializer(project.task_duedates.all(),
-                                         many=True)
+        serializer = self.get_serializer(project.task_duedates.all(), many=True)
 
         return response.Ok(serializer.data)
 
 
-class SeverityViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
-                      ModelCrudViewSet, BulkUpdateOrderMixin):
+class SeverityViewSet(MoveOnDestroyMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
 
     model = models.Severity
     serializer_class = serializers.SeveritySerializer
@@ -839,8 +829,7 @@ class SeverityViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
             return super().create(request, *args, **kwargs)
 
 
-class PriorityViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
-                      ModelCrudViewSet, BulkUpdateOrderMixin):
+class PriorityViewSet(MoveOnDestroyMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
     model = models.Priority
     serializer_class = serializers.PrioritySerializer
     validator_class = validators.PriorityValidator
@@ -860,8 +849,7 @@ class PriorityViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
             return super().create(request, *args, **kwargs)
 
 
-class IssueTypeViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
-                       ModelCrudViewSet, BulkUpdateOrderMixin):
+class IssueTypeViewSet(MoveOnDestroyMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
     model = models.IssueType
     serializer_class = serializers.IssueTypeSerializer
     validator_class = validators.IssueTypeValidator
@@ -881,8 +869,7 @@ class IssueTypeViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
             return super().create(request, *args, **kwargs)
 
 
-class IssueStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin,
-                         ModelCrudViewSet, BulkUpdateOrderMixin):
+class IssueStatusViewSet(MoveOnDestroyMixin, BlockedByProjectMixin, ModelCrudViewSet, BulkUpdateOrderMixin):
     model = models.IssueStatus
     serializer_class = serializers.IssueStatusSerializer
     validator_class = validators.IssueStatusValidator
@@ -910,7 +897,7 @@ class IssueDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
     validator_class = validators.IssueDueDateValidator
     permission_classes = (permissions.IssueDueDatePermission,)
     filter_backends = (filters.CanViewProjectFilterBackend,)
-    filter_fields = ('project',)
+    filter_fields = ("project",)
 
     def create(self, request, *args, **kwargs):
         project_id = request.DATA.get("project", 0)
@@ -919,27 +906,22 @@ class IssueDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
 
     def pre_delete(self, obj):
         if obj.by_default:
-            raise exc.BadRequest(
-                _("You can't delete the default due date status of an issue"))
+            raise exc.BadRequest(_("You can't delete the default due date status of an issue"))
 
     @list_route(methods=["POST"])
     def create_default(self, request, **kwargs):
-        context = {
-            "request": request
-        }
-        validator = validators.DueDatesCreationValidator(data=request.DATA,
-                                                         context=context)
+        context = {"request": request}
+        validator = validators.DueDatesCreationValidator(data=request.DATA, context=context)
         if not validator.is_valid():
             return response.BadRequest(validator.errors)
 
-        project_id = request.DATA.get('project_id')
+        project_id = request.DATA.get("project_id")
         project = models.Project.objects.get(id=project_id)
 
         if project.issue_duedates.all():
             raise exc.BadRequest(_("Project does already have issue due dates"))
 
-        project_template = models.ProjectTemplate.objects.get(
-            id=project.creation_template.id)
+        project_template = models.ProjectTemplate.objects.get(id=project.creation_template.id)
 
         for issue_duedate in project_template.issue_duedates:
             models.IssueDueDate.objects.create(
@@ -948,12 +930,11 @@ class IssueDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
                 color=issue_duedate["color"],
                 days_to_due=issue_duedate["days_to_due"],
                 order=issue_duedate["order"],
-                project=project
+                project=project,
             )
         project.save()
 
-        serializer = self.get_serializer(project.issue_duedates.all(),
-                                         many=True)
+        serializer = self.get_serializer(project.issue_duedates.all(), many=True)
 
         return response.Ok(serializer.data)
 
@@ -961,6 +942,7 @@ class IssueDueDateViewSet(BlockedByProjectMixin, ModelCrudViewSet):
 ######################################################
 ## Project Template
 ######################################################
+
 
 class ProjectTemplateViewSet(ModelCrudViewSet):
     model = models.ProjectTemplate
@@ -975,6 +957,7 @@ class ProjectTemplateViewSet(ModelCrudViewSet):
 ######################################################
 ## Members & Invitations
 ######################################################
+
 
 class MembershipViewSet(BlockedByProjectMixin, ModelCrudViewSet):
     model = models.Membership
@@ -1008,21 +991,14 @@ class MembershipViewSet(BlockedByProjectMixin, ModelCrudViewSet):
 
     def _check_if_project_can_have_more_memberships(self, project, total_new_memberships):
         (can_add_memberships, error_type) = services.check_if_project_can_have_more_memberships(
-            project,
-            total_new_memberships
+            project, total_new_memberships
         )
         if not can_add_memberships:
-            raise exc.NotEnoughSlotsForProject(
-                project.is_private,
-                total_new_memberships,
-                error_type
-            )
+            raise exc.NotEnoughSlotsForProject(project.is_private, total_new_memberships, error_type)
 
     @list_route(methods=["POST"])
     def bulk_create(self, request, **kwargs):
-        context = {
-            "request": request
-        }
+        context = {"request": request}
         validator = validators.MembersBulkValidator(data=request.DATA, context=context)
         if not validator.is_valid():
             return response.BadRequest(validator.errors)
@@ -1030,14 +1006,14 @@ class MembershipViewSet(BlockedByProjectMixin, ModelCrudViewSet):
         data = validator.data
         project = models.Project.objects.get(id=data["project_id"])
         invitation_extra_text = data.get("invitation_extra_text", None)
-        self.check_permissions(request, 'bulk_create', project)
+        self.check_permissions(request, "bulk_create", project)
         if project.blocked_code is not None:
             raise exc.Blocked(_("Blocked element"))
 
         if not request.user.verified_email:
-            return response.BadRequest({
-                "_error_message": _("To add members to a project, first you have to verify your email address")
-            })
+            return response.BadRequest(
+                {"_error_message": _("To add members to a project, first you have to verify your email address")}
+            )
 
         if "bulk_memberships" in data and isinstance(data["bulk_memberships"], list):
             total_new_memberships = len(data["bulk_memberships"])
@@ -1045,15 +1021,16 @@ class MembershipViewSet(BlockedByProjectMixin, ModelCrudViewSet):
 
         try:
             with advisory_lock("membership-creation-{}".format(project.id)):
-                members = services.create_members_in_bulk(data["bulk_memberships"],
-                                                          project=project,
-                                                          invitation_extra_text=invitation_extra_text,
-                                                          callback=self.post_save,
-                                                          precall=self.pre_save)
-                signal_members_added.send(sender=self.__class__,
-                                          user=self.request.user,
-                                          project=project,
-                                          new_members=members)
+                members = services.create_members_in_bulk(
+                    data["bulk_memberships"],
+                    project=project,
+                    invitation_extra_text=invitation_extra_text,
+                    callback=self.post_save,
+                    precall=self.pre_save,
+                )
+                signal_members_added.send(
+                    sender=self.__class__, user=self.request.user, project=project, new_members=members
+                )
         except exc.ValidationError as err:
             return response.BadRequest(err.message_dict)
 
@@ -1064,7 +1041,7 @@ class MembershipViewSet(BlockedByProjectMixin, ModelCrudViewSet):
     def resend_invitation(self, request, **kwargs):
         invitation = self.get_object()
 
-        self.check_permissions(request, 'resend_invitation', invitation.project)
+        self.check_permissions(request, "resend_invitation", invitation.project)
         self.pre_conditions_on_save(invitation)
 
         services.send_invitation(invitation=invitation)
@@ -1072,9 +1049,9 @@ class MembershipViewSet(BlockedByProjectMixin, ModelCrudViewSet):
 
     @list_route(methods=["POST"])
     def remove_user_from_all_my_projects(self, request, **kwargs):
-        private_only = request.DATA.get('private_only', False)
+        private_only = request.DATA.get("private_only", False)
 
-        user_id = request.DATA.get('user', None)
+        user_id = request.DATA.get("user", None)
         if user_id is None:
             raise exc.WrongArguments(_("Invalid user id"))
 
@@ -1094,8 +1071,10 @@ class MembershipViewSet(BlockedByProjectMixin, ModelCrudViewSet):
                 errors.append(membership.project.name)
 
         if len(errors) > 0:
-            error = _("This user can't be removed from the following projects, because that would "
-                      "leave them without any active admin: {}.".format(", ".join(errors)))
+            error = _(
+                "This user can't be removed from the following projects, because that would "
+                "leave them without any active admin: {}.".format(", ".join(errors))
+            )
             return response.BadRequest(error)
 
         memberships.delete()
@@ -1104,8 +1083,9 @@ class MembershipViewSet(BlockedByProjectMixin, ModelCrudViewSet):
 
     def pre_delete(self, obj):
         if obj.user is not None and not services.can_user_leave_project(obj.user, obj.project):
-            raise exc.BadRequest(_("The project must have an owner and at least one of the users "
-                                   "must be an active admin"))
+            raise exc.BadRequest(
+                _("The project must have an owner and at least one of the users " "must be an active admin")
+            )
 
     def pre_save(self, obj):
         if not obj.id:
@@ -1132,6 +1112,7 @@ class InvitationViewSet(ModelListViewSet):
     """
     Only used by front for get invitation by it token.
     """
+
     queryset = models.Membership.objects.filter(user__isnull=True)
     serializer_class = serializers.MembershipSerializer
     lookup_field = "token"
