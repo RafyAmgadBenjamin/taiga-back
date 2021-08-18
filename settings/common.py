@@ -18,7 +18,7 @@ ALLOWED_HOSTS = ["*"]
 
 ADMINS = (("Admin", "example@example.com"),)
 
-DEBUG = False
+DEBUG = True
 
 DATABASES = {
     "default": {
@@ -175,16 +175,9 @@ SITE_ID = "api"
 
 # Session and CSRF configuration
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
-SESSION_COOKIE_AGE = 1209600  # (2 weeks) and set SESSION_EXPIRE_AT_BROWSER_CLOSE to false
-# SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_AGE = None
-# CSRF_COOKIE_SECURE = True
-# SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_NAME = "rafysession"
-SESSION_COOKIE_HTTPONLY = False
-SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_AGE = 1209600  # (2 weeks)
+
+
 # SESSION_COOKIE_DOMAIN = ".localhost"
 # MAIL OPTIONS
 DEFAULT_FROM_EMAIL = "john@doe.com"

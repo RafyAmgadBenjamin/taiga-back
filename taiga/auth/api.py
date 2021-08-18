@@ -10,6 +10,7 @@ from functools import partial
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.http import JsonResponse
 
 
 from taiga.base import exceptions as exc
@@ -27,18 +28,13 @@ from .services import public_register
 from .services import make_auth_response_data
 from .services import get_auth_plugins
 from .throttling import LoginFailRateThrottle, RegisterSuccessRateThrottle
-from django.http import JsonResponse, HttpResponse
+
 import requests
 import nacl.encoding
 import nacl.signing
 from nacl.public import Box
 import json
 import base64
-
-
-# from rest_framework.decorators import authentication_classes, permission_classes
-# from rest_framework.decorators import api_view
-# from taiga.base.api.permissions import AllowAny
 
 
 def _validate_data(data: dict, *, cls):
@@ -155,26 +151,12 @@ class AuthViewSet(viewsets.ViewSet):
         raise exc.BadRequest(_("invalid registration type"))
 
     # /api/v1/auth/callback
-
-    # @action(methods=["GET"], detail=False, permission_classes=[])
     @list_route(methods=["GET"])
     def callback(self, request, **kwargs):
-        # import ipdb
-
-        # ipdb.set_trace()
-        # username = request.QUERY_PARAMS.get("username", None)
-
-        # if request.method == "OPTIONS":
-        #     return HttpResponse(status=200)
         username, email, pk = self._verify_callback_data(request)
         try:
             # Authenticate User
-            # create_resp = self._threebot_auth(request, username, email)
-            # Authenticate User
             print("User is being authenticated")
-            # import ipdb
-
-            # ipdb.set_trace()
             self._threebot_auth(request, username, email)
             user = self._get_user_default_data(username, email)
             user = self._update_user_default_data(user, pk)
@@ -185,15 +167,9 @@ class AuthViewSet(viewsets.ViewSet):
                 # Register User
                 print("User is being registered")
                 return self._threebot_register(request, username, email)
-                # return self._get_response(username, email)
             except Exception as e:
                 print(f"The User can't be authenticated or registered  {e}")
-                # raise e
-
         return
-
-        # data = {}
-        # return response.Ok(data)
 
     def _threebot_auth(self, request, username, email):
         _mutable = request.DATA._mutable
